@@ -34,7 +34,7 @@ class HHResume(BaseModel):
     experience: List[Dict[str, Any]]
     skills: List[Dict[str, str]]
     contacts: Optional[Dict[str, Any]] = None
-    education: List[Dict[str, Any]]]
+    education: List[Dict[str, Any]]
     total_experience: Optional[Dict[str, Any]] = None
 
 class HHClient:

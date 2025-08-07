@@ -2,7 +2,7 @@ version: '3.8'
 
 services:
   postgres:
-    image: postgres:15
+    image: postgres:15-alpine  # Используем облегченный alpine-образ
     environment:
       POSTGRES_USER: parser
       POSTGRES_PASSWORD: parser
@@ -14,13 +14,18 @@ services:
       interval: 5s
       timeout: 5s
       retries: 5
+    restart: unless-stopped  # Добавляем автоматический перезапуск
 
   redis:
-    image: redis:7
+    image: redis:7-alpine  # Облегченная версия
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
     volumes:
       - redis_data:/data
+    restart: unless-stopped
 
   api:
     build:
@@ -34,11 +39,18 @@ services:
       - HH_CLIENT_ID=${HH_CLIENT_ID}
       - HH_CLIENT_SECRET=${HH_CLIENT_SECRET}
       - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - LOG_LEVEL=INFO  # Добавляем уровень логирования
     depends_on:
       postgres:
         condition: service_healthy
       redis:
         condition: service_healthy
+    restart: unless-stopped
+    healthcheck:  # Добавляем healthcheck для API
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
 
   bot:
     build:
@@ -47,9 +59,17 @@ services:
     environment:
       - API_URL=http://api:8000
       - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN}
+      - BOT_POLLING_TIMEOUT=30  # Добавляем таймаут для polling
     depends_on:
       api:
-        condition: service_started
+        condition: service_healthy  # Меняем на healthcheck
+    restart: unless-stopped
+    # Добавляем healthcheck для бота (если есть эндпоинт)
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://api:8000/bot-health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
 
 volumes:
   postgres_data:

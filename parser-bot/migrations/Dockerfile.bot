@@ -1,17 +1,14 @@
 FROM python:3.9-slim
 
+# Создаем правильный рабочий каталог
 WORKDIR /app
 
-# Установка зависимостей
-RUN apt-get update && apt-get install -y \
-    && rm -rf /var/lib/apt/lists/*
+# Копируем зависимости
+COPY ./parser-bot/bot/requirements.txt .
 
-# Копируем зависимости и устанавливаем их
-COPY ./bot/requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Копируем код
-COPY ./bot .
+# Копируем ВСЕ файлы из папки bot
+COPY ./parser-bot/bot .
 
-# Команда запуска
 CMD ["python", "main.py"]
