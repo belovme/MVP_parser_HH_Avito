@@ -23,9 +23,14 @@ async def post_init(application):
 def main() -> None:
     """Запуск бота"""
     try:
+        token = os.getenv("TELEGRAM_BOT_TOKEN")
+        if not token:
+            logger.error("TELEGRAM_BOT_TOKEN не найден в .env файле или переменных окружения.")
+            return
+
         # Создаем Application и передаем токен бота
         application = Application.builder() \
-            .token(os.getenv("TELEGRAM_BOT_TOKEN")) \
+            .token(token) \
             .post_init(post_init) \
             .build()
 
